@@ -10,6 +10,6 @@ import org.apache.ibatis.annotations.Mapper;
  */
 
 @Mapper
-public interface QuestionMapper extends BaseMapper<Question> {
+public interface QuestionMapper_hls extends BaseMapper<Question> {
     // BaseMapper 已提供 selectById，无需额外写方法
 }

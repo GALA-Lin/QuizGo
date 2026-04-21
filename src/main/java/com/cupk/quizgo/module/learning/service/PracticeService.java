@@ -7,8 +7,8 @@ import com.cupk.quizgo.entity.AnswerRecord;
 import com.cupk.quizgo.entity.Question;
 import com.cupk.quizgo.entity.WrongBook;
 import com.cupk.quizgo.module.learning.mapper.AnswerRecordMapper;
-import com.cupk.quizgo.module.learning.mapper.QuestionMapper;
-import com.cupk.quizgo.module.learning.mapper.WrongBookMapper;
+import com.cupk.quizgo.module.learning.mapper.QuestionMapper_hls;
+import com.cupk.quizgo.module.learning.mapper.WrongBookMapper_hls;
 import com.cupk.quizgo.module.learning.vo.RecordVO;
 import com.cupk.quizgo.module.learning.vo.SubmitResultVO;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -19,13 +19,13 @@ import org.springframework.stereotype.Service;
 public class PracticeService {
 
     @Autowired
-    private QuestionMapper questionMapper;
+    private QuestionMapper_hls questionMapperHls;
 
     @Autowired
     private AnswerRecordMapper answerRecordMapper;
 
     @Autowired
-    private WrongBookMapper wrongBookMapper;
+    private WrongBookMapper_hls wrongBookMapperHls;
 
     /**
      * 提交答案核心逻辑：
@@ -35,7 +35,7 @@ public class PracticeService {
      * 4. 答错则插入错题本（重复忽略）
      */
     public SubmitResultVO submit(Long userId, SubmitDTO dto) {
-        Question question = questionMapper.selectById(dto.getQuestionId());
+        Question question = questionMapperHls.selectById(dto.getQuestionId());
         if (question == null) {
             throw new RuntimeException("题目不存在");
         }
@@ -54,7 +54,7 @@ public class PracticeService {
             WrongBook wrongBook = new WrongBook();
             wrongBook.setUserId(userId);
             wrongBook.setQuestionId(dto.getQuestionId());
-            int inserted = wrongBookMapper.insertIgnore(wrongBook);
+            int inserted = wrongBookMapperHls.insertIgnore(wrongBook);
             addedToWrongBook = inserted > 0;
         }
 

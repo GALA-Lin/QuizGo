@@ -10,7 +10,7 @@ import org.apache.ibatis.annotations.Mapper;
  *
  */
 @Mapper
-public interface WrongBookMapper extends BaseMapper<WrongBook> {
+public interface WrongBookMapper_hls extends BaseMapper<WrongBook> {
 
     /**
      * INSERT IGNORE 利用数据库唯一键，重复插入自动忽略
