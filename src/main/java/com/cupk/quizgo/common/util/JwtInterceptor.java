@@ -16,11 +16,19 @@ public class JwtInterceptor implements HandlerInterceptor {
 
     @Override
     public boolean preHandle(HttpServletRequest request, HttpServletResponse response, Object handler) throws Exception {
+        // 1. 核心修复：如果是浏览器自动发送的预检请求(OPTIONS)，直接放行
+        // 这是解决你看到的 403 Preflight 错误的关键
+        if ("OPTIONS".equalsIgnoreCase(request.getMethod())) {
+            return true;
+        }
+
+        // 2. 提取 Token
         String token = request.getHeader("Authorization");
         if (token != null && token.startsWith("Bearer ")) {
             token = token.substring(7);
         }
 
+        // 3. 校验 Token 是否存在
         if (token == null || token.isBlank()) {
             response.setStatus(401);
             response.setContentType("application/json;charset=UTF-8");
@@ -29,13 +37,17 @@ public class JwtInterceptor implements HandlerInterceptor {
         }
 
         try {
+            // 4. 解析 Token 并获取用户信息
             Claims claims = jwtUtil.parseToken(token);
             Long userId = Long.parseLong(claims.getSubject());
             Integer role = claims.get("role", Integer.class);
+
+            // 将用户信息存入 request，方便后续 Controller 使用
             request.setAttribute("userId", userId);
             request.setAttribute("role", role);
             return true;
         } catch (JwtException e) {
+            // 5. 处理 Token 无效或过期
             response.setStatus(401);
             response.setContentType("application/json;charset=UTF-8");
             response.getWriter().write("{\"code\":401,\"message\":\"令牌无效或已过期\"}");
