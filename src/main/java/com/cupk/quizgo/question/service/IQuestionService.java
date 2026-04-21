@@ -9,7 +9,7 @@ public interface IQuestionService extends IService<Question> {
 
     PageResult<QuestionVO> getQuestionList(Long subjectId, Integer page, Integer size);
 
-    PageResult<Question> getAdminQuestionList(Long subjectId, Integer page, Integer size, String keyword);
+    PageResult<Question> getAdminQuestionList(Long subjectId, Long bankId, Integer page, Integer size, String keyword);
 
     void addQuestion(Question question);
 
