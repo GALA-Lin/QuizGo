@@ -3,10 +3,11 @@ import com.baomidou.mybatisplus.core.mapper.BaseMapper;
 import com.baomidou.mybatisplus.extension.plugins.pagination.Page;
 import com.cupk.quizgo.wrongbook.entity.WrongBook;
 import com.cupk.quizgo.wrongbook.vo.WrongBookVO;
+import org.apache.ibatis.annotations.Mapper;
 import org.apache.ibatis.annotations.Param;
 import org.apache.ibatis.annotations.Select;
-
-public interface WrongBookMapper extends BaseMapper<WrongBook> {
+@Mapper
+public interface WrongBookMapper_ZC extends BaseMapper<WrongBook> {
     @Select("SELECT wb.id AS wrongId, q.id AS questionId, q.content, q.type, " +
             "q.options_json AS optionsJson, q.answer, q.analysis, q.difficulty, " +
             "s.name AS subjectName, DATE_FORMAT(wb.create_time,'%Y-%m-%d') AS addTime " +

@@ -5,7 +5,7 @@ import com.baomidou.mybatisplus.extension.plugins.pagination.Page;
 import com.baomidou.mybatisplus.extension.service.impl.ServiceImpl;
 import com.cupk.quizgo.common.result.PageResult;
 import com.cupk.quizgo.question.entity.Question;
-import com.cupk.quizgo.question.mapper.QuestionMapper;
+import com.cupk.quizgo.question.mapper.QuestionMapper_ZZ;
 import com.cupk.quizgo.question.service.IQuestionService;
 import com.cupk.quizgo.question.vo.QuestionVO;
 import org.springframework.beans.BeanUtils;
@@ -16,7 +16,7 @@ import java.util.List;
 import java.util.stream.Collectors;
 
 @Service
-public class QuestionServiceImpl extends ServiceImpl<QuestionMapper, Question> implements IQuestionService {
+public class QuestionServiceImpl extends ServiceImpl<QuestionMapper_ZZ, Question> implements IQuestionService {
 
     @Override
     public PageResult<QuestionVO> getQuestionList(Long subjectId, Integer page, Integer size) {
