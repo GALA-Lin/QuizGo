@@ -11,6 +11,10 @@ public class Question {
     @TableId(type = IdType.AUTO)
     private Long id;
     private Long subjectId; // 科目id
+
+    // 新增：所属题库ID (将题目与题库绑定)
+    private Long bankId;
+
     private String content; // 题目内容
     private Integer type; // 0单选 1多选 2判断
     private String optionsJson; // 选项JSON数组

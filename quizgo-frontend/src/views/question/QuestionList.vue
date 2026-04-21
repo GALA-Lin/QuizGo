@@ -12,14 +12,63 @@
           <p>维护题库内容、选项、答案与解析</p>
         </div>
       </div>
-      <el-button type="primary" class="add-btn" @click="handleAdd">
-        <el-icon><Plus /></el-icon>
-        <span>新增题目</span>
-      </el-button>
+
+      <div class="head-right">
+        <el-upload
+            class="upload-excel"
+            action="http://localhost:8081/api/admin/question/import"
+            :headers="uploadHeaders"
+            :data="uploadData"
+            :show-file-list="false"
+            :before-upload="beforeUpload"
+            :on-success="handleUploadSuccess"
+            :on-error="handleUploadError"
+            accept=".xlsx, .xls"
+        >
+          <el-button type="success" class="import-btn" :disabled="!currentBankId" plain>
+            <el-icon><Upload /></el-icon>
+            <span>批量导入 Excel</span>
+          </el-button>
+        </el-upload>
+
+        <el-button type="primary" class="add-btn" @click="handleAdd">
+          <el-icon><Plus /></el-icon>
+          <span>新增题目</span>
+        </el-button>
+      </div>
     </header>
 
     <section class="toolbar-bar">
       <div class="toolbar-left">
+        <el-select
+            v-model="currentBankId"
+            placeholder="请选择目标题库"
+            style="width: 220px"
+            clearable
+            @change="fetchData"
+        >
+          <el-option label="查看全部题目" :value="null" />
+          <el-option
+              v-for="bank in bankList"
+              :key="bank.id"
+              :label="bank.name"
+              :value="bank.id"
+          />
+        </el-select>
+
+        <el-button type="primary" plain @click="bankDialogVisible = true">
+          + 新建题库
+        </el-button>
+
+        <el-button
+            v-if="currentBankId"
+            type="danger"
+            plain
+            @click="handleDeleteBank"
+        >
+          <el-icon><Delete /></el-icon>
+          删除当前题库
+        </el-button>
         <el-input
             v-model="keyword"
             placeholder="搜索题目内容…"
@@ -69,6 +118,23 @@
         />
       </div>
     </section>
+
+    <el-dialog v-model="bankDialogVisible" title="新建题库容器" width="420px" class="question-dialog">
+      <el-form :model="bankForm" label-position="top">
+        <el-form-item label="题库名称" required>
+          <el-input v-model="bankForm.name" placeholder="例如：计网期末押题集" />
+        </el-form-item>
+        <el-form-item label="描述">
+          <el-input v-model="bankForm.description" type="textarea" placeholder="备注该题库的用途" />
+        </el-form-item>
+      </el-form>
+      <template #footer>
+        <div class="dialog-footer">
+          <button class="footer-cancel" @click="bankDialogVisible = false">取消</button>
+          <button class="footer-save" @click="submitBank">立即创建</button>
+        </div>
+      </template>
+    </el-dialog>
 
     <el-dialog
         v-model="dialogVisible"
@@ -161,8 +227,8 @@
 </template>
 
 <script setup>
-import { ref, reactive, onMounted } from 'vue'
-import { Plus, Search } from '@element-plus/icons-vue'
+import { ref, reactive, onMounted, computed } from 'vue'
+import { Plus, Search, Upload, Delete } from '@element-plus/icons-vue' // 引入 Delete 图标
 import request from '../../utils/request.js'
 import { ElMessage, ElMessageBox } from 'element-plus'
 
@@ -176,9 +242,95 @@ const keyword = ref('')
 
 const typeMap = { 0: '单选', 1: '多选', 2: '判断' }
 
+// --- 题库容器相关逻辑 ---
+const bankList = ref([])
+const currentBankId = ref(null)
+const bankDialogVisible = ref(false)
+const bankForm = reactive({ name: '', description: '', subjectId: 1 })
+
+const fetchBankList = async () => {
+  try {
+    const res = await request.get('/api/admin/bank/list', { params: { subjectId: 1 } })
+    if (res.code === 200) bankList.value = res.data
+  } catch (err) { console.error('拉取题库失败', err) }
+}
+
+const submitBank = async () => {
+  if (!bankForm.name) return ElMessage.warning('名称不能为空')
+  try {
+    const res = await request.post('/api/admin/bank/add', bankForm)
+    if (res.code === 200) {
+      ElMessage.success('题库创建成功')
+      bankDialogVisible.value = false
+      bankForm.name = ''; bankForm.description = ''
+      fetchBankList()
+    }
+  } catch (err) { console.error(err) }
+}
+
+// 👇 新增：删除题库方法 👇
+const handleDeleteBank = async () => {
+  const selectedBank = bankList.value.find(b => b.id === currentBankId.value)
+  try {
+    await ElMessageBox.confirm(
+        `确定要删除题库【${selectedBank?.name}】吗？删除后该题库下的所有题目将永久消失！`,
+        '警告',
+        {
+          confirmButtonText: '确定删除',
+          cancelButtonText: '点错了',
+          type: 'error',
+        }
+    )
+
+    const res = await request.delete(`/api/admin/bank/${currentBankId.value}`)
+    if (res.code === 200) {
+      ElMessage.success('题库及其所属题目已清空')
+      currentBankId.value = null // 清空选中
+      fetchBankList() // 刷新下拉列表
+      fetchData()     // 刷新表格
+    }
+  } catch (err) {
+    // 用户取消了操作
+  }
+}
+// 👆 结束 👆
+
+// --- 批量导入逻辑 ---
+const token = localStorage.getItem('token') || ''
+const uploadHeaders = { Authorization: `Bearer ${token}` }
+
+const uploadData = computed(() => ({
+  subjectId: 1,
+  bankId: currentBankId.value
+}))
+
+const beforeUpload = (file) => {
+  if (!currentBankId.value) {
+    ElMessage.warning('请先在下拉框选择一个目标题库！')
+    return false
+  }
+  const isExcel = file.type === 'application/vnd.ms-excel' ||
+      file.type === 'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet'
+  if (!isExcel) {
+    ElMessage.error('只能上传 Excel 文件!')
+    return false
+  }
+  ElMessage.info('正在解析并导入，请稍候...')
+  return true
+}
+
+const handleUploadSuccess = (res) => {
+  if (res.code === 200) { ElMessage.success('🎉 批量导入成功！'); fetchData() }
+  else ElMessage.error(res.msg || '导入失败')
+}
+
+const handleUploadError = () => ElMessage.error('无法连接到后端 8081 端口')
+
+// --- 题目业务逻辑 ---
 const form = reactive({
   id: null,
   subjectId: 1,
+  bankId: null,
   content: '',
   type: 0,
   answer: '',
@@ -209,6 +361,7 @@ const fetchData = async () => {
     const res = await request.get('/api/admin/question/list', {
       params: {
         subjectId: 1,
+        bankId: currentBankId.value,
         page: currentPage.value,
         size: pageSize.value,
         keyword: keyword.value
@@ -218,11 +371,8 @@ const fetchData = async () => {
       tableData.value = res.data.records
       total.value = res.data.total
     }
-  } catch (err) {
-    console.error(err)
-  } finally {
-    loading.value = false
-  }
+  } catch (err) { console.error(err) }
+  finally { loading.value = false }
 }
 
 const handleAdd = () => {
@@ -246,6 +396,8 @@ const submitForm = async () => {
     return val.startsWith(prefix + '.') ? val : `${prefix}.${val}`
   })
   form.optionsJson = JSON.stringify(formattedOptions)
+  form.bankId = currentBankId.value
+
   const method = form.id ? 'put' : 'post'
   const url = form.id ? '/api/admin/question/update' : '/api/admin/question/add'
   try {
@@ -263,10 +415,13 @@ const handleDelete = async (id) => {
     await ElMessageBox.confirm('题目删除后无法恢复，确定继续？', '提示', { type: 'warning' })
     const res = await request.delete(`/api/admin/question/${id}`)
     if (res.code === 200) { ElMessage.success('删除成功'); fetchData() }
-  } catch (err) { /* canceled */ }
+  } catch (err) { }
 }
 
-onMounted(fetchData)
+onMounted(() => {
+  fetchBankList()
+  fetchData()
+})
 </script>
 
 <style scoped>
@@ -340,6 +495,17 @@ onMounted(fetchData)
   color: var(--text-muted);
 }
 
+.head-right {
+  display: flex;
+  gap: 12px;
+}
+
+.import-btn {
+  border-radius: 10px !important;
+  height: 40px !important;
+  font-weight: 600 !important;
+}
+
 .add-btn {
   background: var(--brand) !important;
   border-color: var(--brand) !important;
@@ -372,23 +538,18 @@ onMounted(fetchData)
 
 .toolbar-left {
   display: flex;
-  gap: 10px;
+  gap: 12px;
   align-items: center;
 }
 
 .toolbar-search {
-  width: 300px;
+  width: 260px;
 }
 
 :deep(.toolbar-search .el-input__wrapper) {
   border-radius: 9px !important;
   border-color: var(--border) !important;
   box-shadow: none !important;
-}
-:deep(.toolbar-search .el-input__wrapper:hover),
-:deep(.toolbar-search .el-input__wrapper.is-focus) {
-  border-color: var(--brand) !important;
-  box-shadow: 0 0 0 3px rgba(79,110,247,.12) !important;
 }
 
 .query-btn {
@@ -437,8 +598,6 @@ onMounted(fetchData)
   color: var(--text-secondary) !important;
   font-weight: 600 !important;
   font-size: 12px !important;
-  text-transform: uppercase;
-  letter-spacing: .04em;
   border-bottom: 1px solid var(--border) !important;
   padding: 13px 0 !important;
 }
@@ -450,14 +609,6 @@ onMounted(fetchData)
   font-size: 14px;
 }
 
-:deep(.el-table tr:hover td.el-table__cell) {
-  background: #f8f9ff !important;
-}
-
-:deep(.el-table__inner-wrapper::before) {
-  display: none;
-}
-
 /* 题型徽章 */
 .type-badge {
   display: inline-flex;
@@ -467,7 +618,6 @@ onMounted(fetchData)
   border-radius: 20px;
   font-size: 11.5px;
   font-weight: 600;
-  letter-spacing: .02em;
 }
 
 .type-0 { color: var(--brand); background: var(--brand-light); }
@@ -479,7 +629,6 @@ onMounted(fetchData)
   display: flex;
   justify-content: flex-end;
   gap: 6px;
-  padding-right: 4px;
 }
 
 .act-btn {
@@ -493,25 +642,8 @@ onMounted(fetchData)
   transition: all .15s;
 }
 
-.act-edit {
-  color: var(--brand);
-  background: var(--brand-light);
-  border-color: #d5dcfc;
-}
-.act-edit:hover {
-  background: #dce4fd;
-  border-color: var(--brand);
-}
-
-.act-del {
-  color: var(--danger);
-  background: var(--danger-light);
-  border-color: #fcd5d0;
-}
-.act-del:hover {
-  background: #fde3e0;
-  border-color: var(--danger);
-}
+.act-edit { color: var(--brand); background: var(--brand-light); }
+.act-del { color: var(--danger); background: var(--danger-light); }
 
 /* 分页 */
 .table-footer {
@@ -521,77 +653,30 @@ onMounted(fetchData)
   border-top: 1px solid #f3f4f8;
 }
 
-:deep(.el-pagination.is-background .el-pager li.is-active) {
-  background: var(--brand) !important;
-}
-
 /* ── Dialog ── */
-:deep(.question-dialog .el-dialog) {
+:deep(.el-dialog) {
   border-radius: 18px !important;
   overflow: hidden;
-  box-shadow: 0 20px 60px rgba(0,0,0,.14) !important;
 }
 
-:deep(.question-dialog .el-dialog__header) {
+:deep(.el-dialog__header) {
   padding: 22px 28px 16px !important;
   border-bottom: 1px solid var(--border);
   margin: 0 !important;
 }
 
-:deep(.question-dialog .el-dialog__title) {
+:deep(.el-dialog__title) {
   font-size: 17px !important;
   font-weight: 700 !important;
-  color: var(--text-primary) !important;
-}
-
-:deep(.question-dialog .el-dialog__body) {
-  padding: 20px 28px 10px !important;
-  background: #fdfdff;
-}
-
-:deep(.question-dialog .el-dialog__footer) {
-  padding: 14px 28px 22px !important;
-  background: #fdfdff;
-  border-top: 1px solid var(--border);
 }
 
 /* ── Form ── */
-.question-form {
-  padding-top: 4px;
-}
-
-:deep(.el-form-item__label) {
-  font-size: 13px !important;
-  font-weight: 600 !important;
-  color: var(--text-secondary) !important;
-  padding-bottom: 6px !important;
-}
-
-:deep(.el-input__wrapper),
-:deep(.el-textarea__inner),
-:deep(.el-select__wrapper) {
-  border-radius: 9px !important;
-  border-color: var(--border) !important;
-  box-shadow: none !important;
-  font-size: 14px !important;
-}
-
-:deep(.el-input__wrapper:hover),
-:deep(.el-input__wrapper.is-focus),
-:deep(.el-textarea__inner:focus),
-:deep(.el-select__wrapper:hover),
-:deep(.el-select__wrapper.is-focused) {
-  border-color: var(--brand) !important;
-  box-shadow: 0 0 0 3px rgba(79,110,247,.12) !important;
-}
-
 .grid-two {
   display: grid;
   grid-template-columns: 1fr 1fr;
   gap: 16px;
 }
 
-/* 选项区 */
 .option-block {
   margin-bottom: 20px;
   padding: 16px 18px;
@@ -609,18 +694,6 @@ onMounted(fetchData)
   font-weight: 600;
   color: var(--text-secondary);
 }
-
-.add-option-btn {
-  font-size: 12.5px;
-  color: var(--brand);
-  background: none;
-  border: none;
-  cursor: pointer;
-  font-weight: 600;
-  padding: 0;
-  transition: opacity .15s;
-}
-.add-option-btn:hover { opacity: .7; }
 
 .option-row {
   display: grid;
@@ -641,7 +714,6 @@ onMounted(fetchData)
   justify-content: center;
   font-size: 12px;
   font-weight: 700;
-  flex-shrink: 0;
 }
 
 .rm-btn {
@@ -651,20 +723,10 @@ onMounted(fetchData)
   border: 1px solid #fcd5d0;
   background: var(--danger-light);
   color: var(--danger);
-  font-size: 11px;
   cursor: pointer;
   display: flex;
   align-items: center;
   justify-content: center;
-  transition: all .15s;
-}
-.rm-btn:hover { background: #fde3e0; }
-.rm-btn:disabled { opacity: .35; cursor: not-allowed; }
-
-/* 答案组 */
-.answer-group {
-  gap: 10px;
-  flex-wrap: wrap;
 }
 
 /* 底部按钮 */
@@ -679,16 +741,8 @@ onMounted(fetchData)
   padding: 0 20px;
   border-radius: 9px;
   border: 1px solid var(--border);
-  background: var(--card);
-  color: var(--text-secondary);
-  font-size: 14px;
-  font-weight: 500;
+  background: #fff;
   cursor: pointer;
-  transition: all .15s;
-}
-.footer-cancel:hover {
-  border-color: var(--text-secondary);
-  color: var(--text-primary);
 }
 
 .footer-save {
@@ -698,35 +752,15 @@ onMounted(fetchData)
   border: none;
   background: linear-gradient(135deg, var(--brand) 0%, #7c91fa 100%);
   color: #fff;
-  font-size: 14px;
   font-weight: 600;
   cursor: pointer;
   box-shadow: 0 3px 10px rgba(79,110,247,.30);
-  transition: all .15s;
-}
-.footer-save:hover {
-  opacity: .9;
-  transform: translateY(-1px);
-  box-shadow: 0 5px 16px rgba(79,110,247,.40);
 }
 
 /* ── 响应式 ── */
 @media (max-width: 768px) {
-  .question-page { padding: 16px; }
-
-  .page-head,
-  .toolbar-bar {
-    flex-direction: column;
-    align-items: stretch;
-    gap: 12px;
-  }
-
-  .toolbar-left {
-    flex-direction: column;
-    align-items: stretch;
-  }
-
+  .page-head, .toolbar-bar { flex-direction: column; align-items: stretch; gap: 12px; }
+  .toolbar-left { flex-direction: column; align-items: stretch; }
   .toolbar-search { width: 100%; }
-  .grid-two { grid-template-columns: 1fr; }
 }
 </style>
