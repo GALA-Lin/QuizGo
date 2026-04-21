@@ -3,7 +3,8 @@ import com.baomidou.mybatisplus.core.conditions.query.LambdaQueryWrapper;
 import com.baomidou.mybatisplus.extension.plugins.pagination.Page;
 import com.cupk.quizgo.common.result.Result;
 import com.cupk.quizgo.wrongbook.entity.WrongBook;
-import com.cupk.quizgo.wrongbook.mapper.WrongBookMapper;
+import com.cupk.quizgo.wrongbook.mapper.WrongBookMapper_ZC;
+import com.cupk.quizgo.wrongbook.mapper.WrongBookMapper_ZC;
 import com.cupk.quizgo.wrongbook.vo.WrongBookVO;
 import lombok.RequiredArgsConstructor;
 import org.springframework.web.bind.annotation.*;
@@ -12,7 +13,7 @@ import org.springframework.web.bind.annotation.*;
 @RequestMapping("/api/wrong")
 @RequiredArgsConstructor
 public class WrongController {
-    private final WrongBookMapper wrongBookMapper;
+    private final WrongBookMapper_ZC wrongBookMapper;
 
     @GetMapping("/list")
     public Result<Page<WrongBookVO>> list(
@@ -29,6 +30,6 @@ public class WrongController {
                 .eq(WrongBook::getId, id)
                 .eq(WrongBook::getUserId, userId)
         );
-        return count > 0 ? Result.success(null) : Result.fail("删除失败或无权限");
+        return count > 0 ? Result.success(null) : Result.error("删除失败或无权限");
     }
 }

@@ -1,8 +1,9 @@
 package com.cupk.quizgo.user.mapper;
 import com.baomidou.mybatisplus.core.mapper.BaseMapper;
-import com.cupk.quizgo.user.entity.User;
+import com.cupk.quizgo.entity.User;
+import org.apache.ibatis.annotations.Mapper;
 import org.apache.ibatis.annotations.Select;
-
+@Mapper
 public interface UserMapper extends BaseMapper<User> {
     @Select("SELECT COUNT(*) FROM answer_record WHERE user_id=#{userId}")
     int countTotalAnswered(Long userId);
