@@ -9,22 +9,19 @@ const routes = [
   {
     path: '/',
     component: () => import('../layouts/MainLayout.vue'),
-    redirect: '/question',
+    // 将默认首页由 /question 改为 /dashboard
+    redirect: '/dashboard',
     children: [
+      {
+        path: 'dashboard',
+        name: 'Dashboard',
+        // 指向你即将新建的 dashboard 页面
+        component: () => import('../views/dashboard/Index.vue')
+      },
       {
         path: 'question',
         name: 'QuestionList',
         component: () => import('../views/question/QuestionList.vue')
-      },
-      {
-        path: 'exam',
-        name: 'ExamPage',
-        component: () => import('../views/exam/ExamPage.vue')
-      },
-      {
-        path: 'user',
-        name: 'UserCenter',
-        component: () => import('../views/user/UserCenter.vue')
       }
     ]
   }
@@ -47,7 +44,6 @@ router.beforeEach((to, from, next) => {
   else if (to.path === '/login' && token) {
     next('/')
   }
-  // 其他情况正常放行
   else {
     next()
   }

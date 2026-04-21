@@ -12,6 +12,15 @@
       </div>
 
       <nav class="sidebar-nav">
+        <RouterLink to="/dashboard" class="nav-item">
+          <span class="nav-icon">
+            <svg width="16" height="16" viewBox="0 0 24 24" fill="none">
+              <path d="M18 20V10M12 20V4M6 20v-6" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>
+            </svg>
+          </span>
+          <span>数据概览</span>
+        </RouterLink>
+
         <RouterLink to="/question" class="nav-item">
           <span class="nav-icon">
             <svg width="16" height="16" viewBox="0 0 24 24" fill="none">
@@ -19,32 +28,12 @@
                     stroke="currentColor" stroke-width="1.8" stroke-linecap="round"/>
             </svg>
           </span>
-          <span>题目管理</span>
-        </RouterLink>
-
-        <RouterLink to="/exam" class="nav-item">
-          <span class="nav-icon">
-            <svg width="16" height="16" viewBox="0 0 24 24" fill="none">
-              <path d="M9 5H7a2 2 0 0 0-2 2v12a2 2 0 0 0 2 2h10a2 2 0 0 0 2-2V7a2 2 0 0 0-2-2h-2M9 5a2 2 0 0 0 2 2h2a2 2 0 0 0 2-2M9 5a2 2 0 0 1 2-2h2a2 2 0 0 1 2 2m-6 9 2 2 4-4"
-                    stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"/>
-            </svg>
-          </span>
-          <span>考试 / 刷题</span>
-        </RouterLink>
-
-        <RouterLink to="/user" class="nav-item">
-          <span class="nav-icon">
-            <svg width="16" height="16" viewBox="0 0 24 24" fill="none">
-              <path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2M12 11a4 4 0 1 0 0-8 4 4 0 0 0 0 8z"
-                    stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"/>
-            </svg>
-          </span>
-          <span>用户管理</span>
+          <span>题库管理</span>
         </RouterLink>
       </nav>
 
       <div class="sidebar-footer">
-        <div class="version-tag">v1.0.0</div>
+        <div class="version-tag">v1.1.0</div>
       </div>
     </aside>
 
@@ -75,7 +64,7 @@
 </template>
 
 <style scoped>
-/* ── 变量（与子页面保持一致） ── */
+/* 样式部分保持原样，确保 UI 一致性 */
 .layout {
   --brand: #4f6ef7;
   --brand-dark: #3a56e0;
@@ -94,7 +83,6 @@
   font-family: 'PingFang SC', 'Hiragino Sans GB', 'Microsoft YaHei', sans-serif;
 }
 
-/* ── 侧边栏 ── */
 .sidebar {
   width: var(--sidebar-w);
   flex-shrink: 0;
@@ -108,7 +96,6 @@
   z-index: 100;
 }
 
-/* Logo 区 */
 .sidebar-brand {
   display: flex;
   align-items: center;
@@ -134,10 +121,8 @@
   font-size: 17px;
   font-weight: 800;
   color: #fff;
-  letter-spacing: -0.01em;
 }
 
-/* 导航链接 */
 .sidebar-nav {
   flex: 1;
   padding: 16px 12px;
@@ -179,14 +164,12 @@
   border-radius: 7px;
   background: rgba(255,255,255,.06);
   flex-shrink: 0;
-  transition: background .18s;
 }
 
 .nav-item.router-link-active .nav-icon {
   background: rgba(79,110,247,.35);
 }
 
-/* 版本号 */
 .sidebar-footer {
   padding: 16px 20px;
   border-top: 1px solid rgba(255,255,255,.07);
@@ -195,10 +178,8 @@
 .version-tag {
   font-size: 11px;
   color: rgba(255,255,255,.2);
-  letter-spacing: .04em;
 }
 
-/* ── 右侧内容区 ── */
 .content-wrap {
   flex: 1;
   margin-left: var(--sidebar-w);
@@ -207,7 +188,6 @@
   min-height: 100vh;
 }
 
-/* 顶栏 */
 .topbar {
   height: 56px;
   display: flex;
@@ -228,19 +208,6 @@
   font-size: 13px;
 }
 
-.breadcrumb-root {
-  color: var(--text-muted);
-}
-
-.breadcrumb-sep {
-  color: var(--border);
-}
-
-.breadcrumb-current {
-  color: var(--text-secondary);
-  font-weight: 500;
-}
-
 .avatar {
   width: 32px;
   height: 32px;
@@ -252,30 +219,15 @@
   justify-content: center;
   cursor: pointer;
   border: 1.5px solid #d5dcfc;
-  transition: all .15s;
 }
 
-.avatar:hover {
-  border-color: var(--brand);
-  background: #dce4fd;
-}
-
-/* 主内容 */
 .main {
   flex: 1;
   overflow: auto;
 }
 
-/* ── 响应式 ── */
 @media (max-width: 768px) {
-  .sidebar {
-    display: none;
-  }
-  .content-wrap {
-    margin-left: 0;
-  }
-  .topbar {
-    padding: 0 16px;
-  }
+  .sidebar { display: none; }
+  .content-wrap { margin-left: 0; }
 }
 </style>
