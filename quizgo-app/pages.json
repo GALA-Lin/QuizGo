@@ -24,6 +24,12 @@
         "navigationBarTitleText": "错题本"
       }
     },
+	{
+	  "path": "pages/wrong/wrong_detail",
+	  "style": {
+	    "navigationBarTitleText": "错题详情"
+	  }
+	},
     {
       "path": "pages/profile/profile",
       "style": {

@@ -14,33 +14,37 @@ import com.cupk.quizgo.module.learning.vo.SubmitResultVO;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 
+import java.util.Arrays;
+import java.util.stream.Collectors;
+
 
 @Service
 public class PracticeService {
 
     @Autowired
-    private QuestionMapper_hls questionMapperHls;
+    private QuestionMapper_hls questionMapper;
 
     @Autowired
     private AnswerRecordMapper answerRecordMapper;
 
     @Autowired
-    private WrongBookMapper_hls wrongBookMapperHls;
+    private WrongBookMapper_hls wrongBookMapper;
 
     /**
      * 提交答案核心逻辑：
      * 1. 查题目
-     * 2. 判断对错
+     * 2. 判断对错（兼容单选/多选/判断）
      * 3. 插入答题记录
      * 4. 答错则插入错题本（重复忽略）
      */
     public SubmitResultVO submit(Long userId, SubmitDTO dto) {
-        Question question = questionMapperHls.selectById(dto.getQuestionId());
+        Question question = questionMapper.selectById(dto.getQuestionId());
         if (question == null) {
             throw new RuntimeException("题目不存在");
         }
 
-        boolean isCorrect = question.getAnswer().equalsIgnoreCase(dto.getUserAnswer());
+        // 兼容多选：将选项拆分排序后再比较，避免顺序不同判错
+        boolean isCorrect = checkAnswer(question.getAnswer(), dto.getUserAnswer());
 
         AnswerRecord record = new AnswerRecord();
         record.setUserId(userId);
@@ -54,7 +58,7 @@ public class PracticeService {
             WrongBook wrongBook = new WrongBook();
             wrongBook.setUserId(userId);
             wrongBook.setQuestionId(dto.getQuestionId());
-            int inserted = wrongBookMapperHls.insertIgnore(wrongBook);
+            int inserted = wrongBookMapper.insertIgnore(wrongBook);
             addedToWrongBook = inserted > 0;
         }
 
@@ -64,6 +68,24 @@ public class PracticeService {
         vo.setAnalysis(question.getAnalysis());
         vo.setAddedToWrongBook(addedToWrongBook);
         return vo;
+    }
+
+    /**
+     * 答案比较：兼容单选（"A"）和多选（"A,B,C,D"）
+     * 将选项拆分 → 去空格 → 转大写 → 排序 → 拼接后做字符串比较
+     * 例：用户答 "D,A,B,C" 与正确答案 "A,B,C,D" 视为正确
+     */
+    private boolean checkAnswer(String correct, String userAnswer) {
+        if (correct == null || userAnswer == null) return false;
+        return normalize(correct).equals(normalize(userAnswer));
+    }
+
+    private String normalize(String answer) {
+        return Arrays.stream(answer.split(","))
+                .map(String::trim)
+                .map(String::toUpperCase)
+                .sorted()
+                .collect(Collectors.joining(","));
     }
 
     /**

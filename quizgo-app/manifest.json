@@ -1,17 +1,20 @@
 {
-  "name": "QuizGo",
-  "appid": "__UNI__QUIZGO__",
-  "description": "QuizGo UniApp scaffold",
-  "versionName": "1.0.0",
-  "versionCode": "100",
-  "transformPx": false,
-  "app-plus": {
-    "usingComponents": true
-  },
-  "h5": {
-    "title": "QuizGo"
-  },
-  "mp-weixin": {
-    "appid": ""
-  }
+    "name" : "QuizGo",
+    "appid" : "__UNI__QUIZGO__",
+    "description" : "QuizGo UniApp scaffold",
+    "versionName" : "1.0.0",
+    "versionCode" : "100",
+    "transformPx" : false,
+    "app-plus" : {
+        "usingComponents" : true
+    },
+    "h5" : {
+        "title" : "QuizGo",
+        "devServer" : {
+            "port" : ""
+        }
+    },
+    "mp-weixin" : {
+        "appid" : ""
+    }
 }
