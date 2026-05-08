@@ -1,4 +1,4 @@
-const BASE_URL = 'http://localhost:8081'
+const BASE_URL = 'https://quizgo.gala-lin.top'
 
 export function request(options) {
   return new Promise((resolve, reject) => {
