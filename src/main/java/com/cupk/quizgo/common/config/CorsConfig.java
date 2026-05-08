@@ -11,13 +11,12 @@ public class CorsConfig {
     @Bean
     public CorsFilter corsFilter() {
         CorsConfiguration config = new CorsConfiguration();
-        // 允许前端8080端口跨域
-        config.addAllowedOrigin("http://localhost:8080");
-        // 允许携带cookie
+        // 允许实际部署的前端域名
+        config.addAllowedOrigin("https://quizgo.gala-lin.top");
+        // 如果本地开发也要用，再加上
+        config.addAllowedOrigin("http://localhost:5173");
         config.setAllowCredentials(true);
-        // 允许所有请求头
         config.addAllowedHeader("*");
-        // 允许所有请求方法
         config.addAllowedMethod("*");
 
         UrlBasedCorsConfigurationSource source = new UrlBasedCorsConfigurationSource();
