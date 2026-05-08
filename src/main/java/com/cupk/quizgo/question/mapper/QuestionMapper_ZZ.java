@@ -5,5 +5,5 @@ import com.cupk.quizgo.question.entity.Question;
 import org.apache.ibatis.annotations.Mapper;
 
 @Mapper
-public interface QuestionMapper extends BaseMapper<Question> {
+public interface QuestionMapper_ZZ extends BaseMapper<Question> {
 }

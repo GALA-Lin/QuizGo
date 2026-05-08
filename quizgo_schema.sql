@@ -59,3 +59,20 @@ INSERT INTO question VALUES
                          (1,1,'下列词语中，字形全部正确的一组是？',0,'["A.欢渡春节","B.融会贯通","C.目不转晴","D.再接再厉"]','D','再接再厉是固定搭配，其他均有错字',1),
                          (2,2,'计算：125 × 8 = ？',0,'["A.900","B.1000","C.1100","D.1200"]','B','125×8=1000',1),
                          (3,3,'Which is correct?',0,'["A.I am a student","B.I is a student","C.I are a student","D.I be a student"]','A','主语I对应am',1);
+
+
+-- 1. 新增题库表
+CREATE TABLE question_bank (
+                               id BIGINT PRIMARY KEY AUTO_INCREMENT,
+                               subject_id BIGINT NOT NULL COMMENT '所属科目ID',
+                               name VARCHAR(100) NOT NULL COMMENT '题库名称(如: 2024计网期末冲刺)',
+                               description VARCHAR(255) COMMENT '题库简介',
+                               cover_img VARCHAR(255) COMMENT '封面图URL',
+                               create_time DATETIME DEFAULT NOW()
+);
+
+-- 2. 修改现有的题目表 (增加 bank_id)
+-- 假设你原来的题目表叫 question
+ALTER TABLE question ADD COLUMN bank_id BIGINT COMMENT '所属题库ID';
+-- 为了查询速度，顺手建个索引
+ALTER TABLE question ADD INDEX idx_bank_id(bank_id);
