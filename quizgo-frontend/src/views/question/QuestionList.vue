@@ -16,7 +16,7 @@
       <div class="head-right">
         <el-upload
             class="upload-excel"
-            action="http://localhost:8081/api/admin/question/import"
+            action="https://quizgo.gala-lin.top/api/admin/question/import"
             :headers="uploadHeaders"
             :data="uploadData"
             :show-file-list="false"
@@ -324,7 +324,7 @@ const handleUploadSuccess = (res) => {
   else ElMessage.error(res.msg || '导入失败')
 }
 
-const handleUploadError = () => ElMessage.error('无法连接到后端 8081 端口')
+const handleUploadError = () => ElMessage.error('无法连接到后端端口')
 
 // --- 题目业务逻辑 ---
 const form = reactive({
